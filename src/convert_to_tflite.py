@@ -7,8 +7,6 @@ from torchvision.datasets import ImageFolder
 import traceback
 from pathlib import Path
 import flatbuffers
-from tflite_support import metadata as _metadata
-from tflite_support import metadata_schema_py_generated as _metadata_fb
 
 script_dir = Path(__file__).parent.resolve()
 
