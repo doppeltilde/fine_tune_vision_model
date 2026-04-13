@@ -1,11 +1,15 @@
-torch==2.9.0
-torchvision==0.24.0
-litert_torch==0.8.0
-timm==1.0.26
+torch==2.11.0
+torchvision==0.26.0
 
+# Use litert nightly until the next stable version lands
+# litert-torch==0.8.0
+litert-torch-nightly==0.9.0.dev20260412
+
+timm==1.0.26
 tqdm==4.67.3
 pillow==12.2.0
 numpy==2.4.4
 mediapipe==0.10.33
 flatbuffers==25.12.19
-tflite-support==0.4.4
+
+tflite-support

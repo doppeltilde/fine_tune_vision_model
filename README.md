@@ -13,6 +13,10 @@ When its finished it will return a checkpoint file.
 
 This will return a tflite and labels.txt file.
 
+### Add metadata to tflite model
+1. Run `python src/add_metadata_to_tflite.py`.
+
+
 > [!NOTE]
 > Fine-tuned models are used in conjunction with the [Vision Classification](https://github.com/doppeltilde/vision_classification) project, utilizing its Mediapipe Image Classification task.
 
