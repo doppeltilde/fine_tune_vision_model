@@ -7,6 +7,7 @@ from torchvision import datasets, transforms
 import timm
 from tqdm import tqdm
 import torch.multiprocessing as mp
+import datetime
 
 
 def main():
