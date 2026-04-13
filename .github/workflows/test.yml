@@ -24,8 +24,8 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y \
           libgl1 \
-          libgles2-mesa \
-          libegl1-mesa \
+          libgles2 \
+          libgles2-dev \
           libgbm1 \
           libxext6 \
           libxrender-dev
