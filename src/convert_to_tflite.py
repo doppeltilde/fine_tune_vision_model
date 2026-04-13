@@ -25,6 +25,17 @@ class NormalizedModel(torch.nn.Module):
         return self.model(x)
 
 
+class LogitNormalizer(torch.nn.Module):
+    def __init__(self, model):
+        super().__init__()
+        self.model = model
+        self.softmax = torch.nn.Softmax(dim=1)
+
+    def forward(self, x):
+        logits = self.model(x)
+        return self.softmax(logits)
+
+
 def main():
     print("Loading fine-tuned model for conversion...")
 
@@ -42,13 +53,13 @@ def main():
     num_classes = len(class_names)
     print(f"Number of classes: {num_classes}")
 
-    model = timm.create_model(
+    base_model = timm.create_model(
         "tf_efficientnet_lite4", pretrained=False, num_classes=num_classes
     )
 
     checkpoint_path = script_dir / "tflite/finetuned.pth"
     checkpoint = torch.load(checkpoint_path, map_location="cpu", weights_only=True)
-    model.load_state_dict(checkpoint["model_state_dict"])
+    base_model.load_state_dict(checkpoint["model_state_dict"])
 
     print("Finetuned model loaded successfully.")
 
@@ -62,7 +73,8 @@ def main():
     print(f"labels.txt created successfully at: {labels_path}")
     print(f"Total labels written: {len(class_names)}")
 
-    model = model.cpu().float().eval()
+    model = LogitNormalizer(base_model)
+    model.eval()
 
     print("\nConverting model to TensorFlow Lite format...")
 
