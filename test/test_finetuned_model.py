@@ -8,7 +8,7 @@ ImageClassifier = mp.tasks.vision.ImageClassifier
 ImageClassifierOptions = mp.tasks.vision.ImageClassifierOptions
 VisionRunningMode = mp.tasks.vision.RunningMode
 
-model_path = "test/model.tflite"
+model_path = "test/mushroom.tflite"
 image_path = "test/mushroom.jpg"
 
 options = ImageClassifierOptions(
