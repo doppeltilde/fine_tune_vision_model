@@ -75,7 +75,6 @@ def main():
                 "epoch": epoch,
                 "model_state_dict": model.state_dict(),
                 "optimizer_state_dict": optimizer.state_dict(),
-                "loss": avg_loss,
                 "classes": train_dataset.classes,
             },
             checkpoint_name,

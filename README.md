@@ -19,8 +19,7 @@ This will return a tflite and labels.txt file.
 ### 3. Add metadata to tflite model
 1. Run `python src/add_metadata_to_tflite.py`.
 
-
-> [!NOTE]
+> [!TIP]
 > Fine-tuned models are used in conjunction with the [Vision Classification](https://github.com/doppeltilde/vision_classification) project, utilizing its Mediapipe Image Classification task.
 
 ---
