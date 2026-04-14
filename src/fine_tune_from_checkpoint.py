@@ -35,7 +35,9 @@ def main():
     )
 
     model = timm.create_model(
-        "tf_efficientnet_lite4", pretrained=True, num_classes=len(train_dataset.classes)
+        "tf_efficientnet_lite4",
+        pretrained=False,
+        num_classes=len(train_dataset.classes),
     )
     model = model.to(device)
 
@@ -46,7 +48,13 @@ def main():
 
     os.makedirs("checkpoints", exist_ok=True)
 
-    num_epochs = 10
+    checkpoint_path = "checkpoints/checkpoint_epoch_5.pth"
+    checkpoint = torch.load(checkpoint_path, map_location=device, weights_only=True)
+
+    model.load_state_dict(checkpoint["model_state_dict"])
+    optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
+
+    num_epochs = 5
 
     print("Starting fine-tuning from pretrained weights...")
 
@@ -86,11 +94,12 @@ def main():
 
     print("\nTraining completed successfully.")
 
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M")
-    model_filename = f"efficientnet_lite4_final_finetuned_{timestamp}.pth"
+    model_filename = f"efficientnet_lite4_final_finetuned.pth"
 
     os.makedirs("tflite", exist_ok=True)
     checkpoint_path = f"tflite/{model_filename}"
+
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
 
     torch.save(
         {

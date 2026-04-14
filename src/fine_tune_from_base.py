@@ -7,7 +7,6 @@ from torchvision import datasets, transforms
 import timm
 from tqdm import tqdm
 import torch.multiprocessing as mp
-import datetime
 
 
 def main():
@@ -83,8 +82,7 @@ def main():
 
     print("Training completed.")
 
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M")
-    model_filename = f"efficientnet_lite4_final_finetuned_{timestamp}.pth"
+    model_filename = f"efficientnet_lite4_final_finetuned.pth"
 
     os.makedirs("tflite", exist_ok=True)
     checkpoint_path = f"tflite/{model_filename}"

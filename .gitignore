@@ -5,3 +5,5 @@ src/tflite/labels.txt
 src/tflite/model.tflite
 src/tflite/finetuned.pth
 /src/tflite
+/checkpoints
+/tflite
