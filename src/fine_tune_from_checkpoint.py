@@ -29,7 +29,7 @@ def main():
         train_dataset,
         batch_size=16,
         shuffle=True,
-        num_workers=0,
+        num_workers=4,
         pin_memory=False,
         persistent_workers=False,
     )

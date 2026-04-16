@@ -7,6 +7,7 @@ from torchvision import datasets, transforms
 import timm
 from tqdm import tqdm
 import torch.multiprocessing as mp
+import datetime
 
 
 def main():
@@ -28,7 +29,7 @@ def main():
         train_dataset,
         batch_size=16,
         shuffle=True,
-        num_workers=0,
+        num_workers=4,
         pin_memory=False,
         persistent_workers=False,
     )
@@ -86,6 +87,8 @@ def main():
 
     os.makedirs("tflite", exist_ok=True)
     checkpoint_path = f"tflite/{model_filename}"
+
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
 
     torch.save(
         {
