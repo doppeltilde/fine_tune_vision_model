@@ -8,29 +8,63 @@ import timm
 from tqdm import tqdm
 import torch.multiprocessing as mp
 import datetime
+from PIL import Image, UnidentifiedImageError
+
+
+def is_valid_image_file(filepath: str) -> bool:
+    try:
+        with Image.open(filepath) as img:
+            img.load()
+            print(f"Valid Image: {filepath}")
+        return True
+    except (UnidentifiedImageError, OSError, IOError):
+        print(f"Skipping invalid/corrupted image: {filepath}")
+        return False
+    except Exception as e:
+        print(f"Unexpected error with file {filepath}: {type(e).__name__}")
+        return False
 
 
 def main():
-    device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
-    print(f"Using device: {device}")
+    if torch.cuda.is_available():
+        device = torch.device("cuda")
+        print(f"Using device: {device} - {torch.cuda.get_device_name(0)}")
+    elif hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
+        device = torch.device("mps")
+        print(f"Using device: {device}")
+    else:
+        device = torch.device("cpu")
+        print(f"Using device: {device}")
 
     transform = transforms.Compose(
         [
             transforms.Resize(456),
             transforms.CenterCrop(380),
             transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+            transforms.Normalize(
+                mean=[0.485, 0.456, 0.406],
+                std=[0.229, 0.224, 0.225],
+            ),
         ]
     )
 
-    train_dataset = datasets.ImageFolder(root="dataset", transform=transform)
+    train_dataset = datasets.ImageFolder(
+        root="dataset",
+        transform=transform,
+        is_valid_file=is_valid_image_file,
+    )
+
+    print(
+        f"Dataset successfully loaded: {len(train_dataset)} valid images, "
+        f"{len(train_dataset.classes)} classes."
+    )
 
     train_loader = DataLoader(
         train_dataset,
         batch_size=16,
         shuffle=True,
-        num_workers=4,
-        pin_memory=False,
+        num_workers=6,
+        pin_memory=True if device.type in ["cuda", "mps"] else False,
         persistent_workers=False,
     )
 
@@ -40,9 +74,14 @@ def main():
     model = model.to(device)
 
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.AdamW(model.parameters(), lr=1e-4, weight_decay=1e-5)
+    optimizer = optim.AdamW(
+        model.parameters(),
+        lr=1e-4,
+        weight_decay=1e-5,
+    )
 
-    scaler = torch.amp.GradScaler(enabled=device.type == "mps")
+    use_amp = device.type in ["cuda", "mps"]
+    scaler = torch.amp.GradScaler(enabled=use_amp)
 
     os.makedirs("checkpoints", exist_ok=True)
 
@@ -55,7 +94,7 @@ def main():
 
             optimizer.zero_grad()
 
-            with torch.amp.autocast(device_type="mps", dtype=torch.float16):
+            with torch.amp.autocast(device_type=device.type, enabled=use_amp):
                 outputs = model(inputs)
                 loss = criterion(outputs, labels)
 
@@ -63,11 +102,10 @@ def main():
             scaler.step(optimizer)
             scaler.update()
 
-            running_loss += loss.item()
+            running_loss += loss.item() * inputs.size(0)
 
-        print(
-            f"Epoch [{epoch+1}/{num_epochs}], Loss: {running_loss/len(train_loader):.4f}"
-        )
+        epoch_loss = running_loss / len(train_dataset)
+        print(f"Epoch [{epoch+1}/{num_epochs}], Loss: {epoch_loss:.4f}")
 
         checkpoint_name = f"checkpoints/checkpoint_epoch_{epoch+1}.pth"
         torch.save(

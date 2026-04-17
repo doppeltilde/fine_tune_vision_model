@@ -18,13 +18,6 @@ def main():
         traceback.print_exc()
 
 
-NORM_MEAN = [0.485, 0.456, 0.406]
-NORM_STD = [0.229, 0.224, 0.225]
-
-SCALAR_MEAN = [sum(NORM_MEAN) / len(NORM_MEAN)]
-SCALAR_STD = [sum(NORM_STD) / len(NORM_STD)]
-
-
 def attach_metadata(tflite_path: Path, labels_path: Path):
     model_meta = _metadata_fb.ModelMetadataT()
     model_meta.name = "EfficientNet Lite4 Classifier"
@@ -34,11 +27,13 @@ def attach_metadata(tflite_path: Path, labels_path: Path):
     input_meta.name = "image"
     input_meta.description = "Input RGB image (H x W x 3, float32)"
 
+    # MediaPipe REQUIRES these for float32, but since your model
+    # handles normalization internally, we use "Identity" values:
     norm_unit = _metadata_fb.ProcessUnitT()
     norm_unit.optionsType = _metadata_fb.ProcessUnitOptions.NormalizationOptions
     norm_opts = _metadata_fb.NormalizationOptionsT()
-    norm_opts.mean = SCALAR_MEAN
-    norm_opts.std = SCALAR_STD
+    norm_opts.mean = [0.0, 0.0, 0.0]
+    norm_opts.std = [1.0, 1.0, 1.0]
     norm_unit.options = norm_opts
     input_meta.processUnits = [norm_unit]
 

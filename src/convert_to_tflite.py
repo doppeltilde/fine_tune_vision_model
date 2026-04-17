@@ -14,11 +14,13 @@ class NormalizedModel(torch.nn.Module):
     def __init__(self, model):
         super().__init__()
         self.model = model
-        self.register_buffer("mean", torch.tensor(NORM_MEAN).view(1, 1, 1, 3))
-        self.register_buffer("std", torch.tensor(NORM_STD).view(1, 1, 1, 3))
 
     def forward(self, x):
-        x = (x - self.mean) / self.std
+        x = x.float() / 255.0
+        x = (x - torch.tensor([0.485, 0.456, 0.406]).view(1, 1, 1, 3)) / torch.tensor(
+            [0.229, 0.224, 0.225]
+        ).view(1, 1, 1, 3)
+        x = x.permute(0, 3, 1, 2)
         return self.model(x)
 
 
@@ -47,15 +49,20 @@ def main():
 
     dataset = ImageFolder(root="dataset", transform=transform)
     class_names = dataset.classes
+
+    checkpoint_path = script_dir / "tflite/efficientnet_lite4_final_finetuned.pth"
+    checkpoint = torch.load(checkpoint_path, map_location="cpu", weights_only=True)
+
+    class_names = checkpoint["class_names"]
     num_classes = len(class_names)
-    print(f"Number of classes: {num_classes}")
+    print(f"Loading model with {num_classes} classes from checkpoint.")
 
     base_model = timm.create_model(
-        "tf_efficientnet_lite4", pretrained=False, num_classes=num_classes
+        "tf_efficientnet_lite4",
+        pretrained=False,
+        num_classes=num_classes,
     )
 
-    checkpoint_path = script_dir / "tflite/finetuned.pth"
-    checkpoint = torch.load(checkpoint_path, map_location="cpu", weights_only=True)
     base_model.load_state_dict(checkpoint["model_state_dict"])
 
     print("Finetuned model loaded successfully.")
@@ -70,17 +77,15 @@ def main():
     print(f"labels.txt created successfully at: {labels_path}")
     print(f"Total labels written: {len(class_names)}")
 
-    model = LogitNormalizer(base_model)
+    model = LogitNormalizer(NormalizedModel(base_model))
     model.eval()
 
     print("\nConverting model to TensorFlow Lite format...")
 
     try:
-        sample_input_nhwc = torch.randn(1, 380, 380, 3, dtype=torch.float32)
+        sample_input = torch.randn(1, 380, 380, 3)
 
-        model_for_conversion = litert_torch.to_channel_last_io(model, args=[0])
-
-        edge_model = litert_torch.convert(model_for_conversion, (sample_input_nhwc,))
+        edge_model = litert_torch.convert(model, (sample_input,))
 
         os.makedirs("tflite", exist_ok=True)
         tflite_path = script_dir / "tflite/model.tflite"

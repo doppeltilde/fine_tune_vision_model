@@ -41,4 +41,4 @@ jobs:
         pip install -r requirements.txt
 
     - name: Run test
-      run: python test/test_finetuned_model.py
+      run: python test/hotdognothotdog/test_hotdognothotdog.py
