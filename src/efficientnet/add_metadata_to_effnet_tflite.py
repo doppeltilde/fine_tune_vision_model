@@ -28,8 +28,7 @@ def attach_metadata(tflite_path: Path, labels_path: Path):
     input_meta.description = "Input RGB image (H x W x 3, float32)"
 
     # IMPORTANT!
-    # MediaPipe REQUIRES these for float32, but since your model
-    # handles normalization internally, we use "Identity" values:
+    # MediaPipe REQUIRES these for float32
     norm_unit = _metadata_fb.ProcessUnitT()
     norm_unit.optionsType = _metadata_fb.ProcessUnitOptions.NormalizationOptions
     norm_opts = _metadata_fb.NormalizationOptionsT()
